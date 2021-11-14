@@ -1,12 +1,4 @@
 Collecting termcolor
-  Downloading termcolor-1.1.0.tar.gz (3.9 kB)
-  Preparing metadata (setup.py): started
-  Preparing metadata (setup.py): finished with status 'done'
-Building wheels for collected packages: termcolor
-  Building wheel for termcolor (setup.py): started
-  Building wheel for termcolor (setup.py): finished with status 'done'
-  Created wheel for termcolor: filename=termcolor-1.1.0-py3-none-any.whl size=4847 sha256=2fe55bbaadfeab7170805cf6d6e9edc97ce0695306e250e1bcb1f159f1f95b9e
-  Stored in directory: /home/sun/.cache/pip/wheels/a0/16/9c/5473df82468f958445479c59e784896fa24f4a5fc024b0f501
-Successfully built termcolor
+  Using cached termcolor-1.1.0-py3-none-any.whl
 Installing collected packages: termcolor
 Successfully installed termcolor-1.1.0
