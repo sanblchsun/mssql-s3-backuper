@@ -1,5 +1,6 @@
 import pyodbc
 import datetime
+import gzip
 
 server = 'localhost'
 username = 'SA'
@@ -23,7 +24,8 @@ for database in databases:
     if database_name not in SKIP:
         cursor = cnxn.cursor()
         backup = "BACKUP DATABASE [" + database_name + "] TO DISK = N'" + location + "/" + database_name + '-' + str(TODAY) + ".bak'"
-        cursor.execute(backup)
+        # cursor.execute(backup)
+        cursor.execute(f"{backup} | gzip -c --best -out {location}")
         while cursor.nextset():
             pass
         cursor.close()
