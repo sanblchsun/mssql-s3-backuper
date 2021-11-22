@@ -9,7 +9,7 @@ from pathlib import Path
 import socket
 
 import boto3
-import psycopg2
+import pyodbc
 from termcolor import colored
 
 
@@ -21,23 +21,10 @@ BACKUP_KEY_PRIVATE_FILE = os.getenv("BACKUP_KEY_PRIVATE_FILE")
 
 DB_FILENAME = '/tmp/backup_db.sql.gz.enc'
 
-
-connection = psycopg2.connect(
-    f"dbname={DB_NAME} user={DB_USER} host='{DB_HOSTNAME}'")
-cursor = connection.cursor()
-
-# try:
-#     connection = psycopg2.connect(
-#         f"dbname={DB_NAME} user={DB_USER} host='{DB_HOSTNAME}'")
-#     cursor = connection.cursor()
-    
-# except Exception as e:
-#     print("[INFO] Error while working with PostgreSQL ", e)
-# finally:
-#     if connection:
-#         cursor.close()
-#         connection.close()
-#         print("[INFO] PostgreSQL connection closed")
+cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+DB_HOSTNAME+';'
+                                                                                   'DATABASE=master;UID='+DB_USER+';PWD='+ DB_PASSWD)
+cnxn.autocommit = True
+cursor = cnxn.cursor()
 
 
 def say_hello():
@@ -102,37 +89,40 @@ def unencrypt_database():
     print(f"\U0001F511 Database unecnrypted")
 
 
-def unzip_database():
-    _silent_remove_file("/tmp/db.sql")
-    operation_status = os.WEXITSTATUS(os.system(
-        f"""gzip -d /tmp/db.sql.gz"""
-    ))
-    if operation_status != 0:
-        exit(f"\U00002757 Can not unecrypt db file, status "
-             f"{operation_status}.")
-    print(f"\U0001F4E4 Database unzipped")
+# def unzip_database():
+#     _silent_remove_file("/tmp/db.sql")
+#     operation_status = os.WEXITSTATUS(os.system(
+#         f"""gzip -d /tmp/db.sql.gz"""
+#     ))
+#     if operation_status != 0:
+#         exit(f"\U00002757 Can not unecrypt db file, status "
+#              f"{operation_status}.")
+#     print(f"\U0001F4E4 Database unzipped")
+
+def restore_database():
+    pass
 
 
-def clear_database():
-    tables = _get_all_db_tables()
-    if not tables:
-        return
-    with connection:
-        with connection.cursor() as local_cursor:
-            local_cursor.execute("\n".join([
-                f'drop table if exists "{table}" cascade;'
-                for table in tables]))
-    print(f"\U0001F633 Database cleared")
-
-
-def load_database():
-    print(f"\U0001F4A4 Database load started")
-    operation_status = os.WEXITSTATUS(os.system(
-        f"""psql -h {DB_HOSTNAME} -U {DB_USER} {DB_NAME} < /tmp/db.sql"""
-    ))
-    if operation_status != 0:
-        exit(f"\U00002757 Can not load database, status {operation_status}.")
-    print(f"\U0001F916 Database loaded")
+# def clear_database():
+#     tables = _get_all_db_tables()
+#     if not tables:
+#         return
+#     with connection:
+#         with connection.cursor() as local_cursor:
+#             local_cursor.execute("\n".join([
+#                 f'drop table if exists "{table}" cascade;'
+#                 for table in tables]))
+#     print(f"\U0001F633 Database cleared")
+#
+#
+# def load_database():
+#     print(f"\U0001F4A4 Database load started")
+#     operation_status = os.WEXITSTATUS(os.system(
+#         f"""psql -h {DB_HOSTNAME} -U {DB_USER} {DB_NAME} < /tmp/db.sql"""
+#     ))
+#     if operation_status != 0:
+#         exit(f"\U00002757 Can not load database, status {operation_status}.")
+#     print(f"\U0001F916 Database loaded")
 
 
 def remove_temp_files():
@@ -162,7 +152,8 @@ if __name__ == "__main__":
     check_key_file_exists()
     download_s3_file(get_last_backup_filename())
     unencrypt_database()
-    unzip_database()
-    clear_database()
-    load_database()
+    restore_database()
+    # unzip_database()
+    # clear_database()
+    # load_database()
     remove_temp_files()
