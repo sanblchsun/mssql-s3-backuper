@@ -16,15 +16,11 @@ from termcolor import colored
 DB_HOSTNAME = os.getenv("DB_HOSTNAME", "localhost")
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
+DB_PASSWD = os.getenv("DB_PASSWD")
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 BACKUP_KEY_PRIVATE_FILE = os.getenv("BACKUP_KEY_PRIVATE_FILE")
 
 DB_FILENAME = '/tmp/backup_db.sql.gz.enc'
-
-cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+DB_HOSTNAME+';'
-                                                                                   'DATABASE=master;UID='+DB_USER+';PWD='+ DB_PASSWD)
-cnxn.autocommit = True
-cursor = cnxn.cursor()
 
 
 def say_hello():
@@ -90,6 +86,7 @@ def unencrypt_database():
 
 
 # def unzip_database():
+
 #     _silent_remove_file("/tmp/db.sql")
 #     operation_status = os.WEXITSTATUS(os.system(
 #         f"""gzip -d /tmp/db.sql.gz"""
@@ -97,10 +94,28 @@ def unencrypt_database():
 #     if operation_status != 0:
 #         exit(f"\U00002757 Can not unecrypt db file, status "
 #              f"{operation_status}.")
-#     print(f"\U0001F4E4 Database unzipped")
-
+#     print(f"\U0001F4E4 Database unzipped")DB_NAME
 def restore_database():
-    pass
+    cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+DB_HOSTNAME+';'
+                                    'DATABASE=master;UID='+DB_USER+';PWD='+ DB_PASSWD)
+    cnxn.autocommit = True
+    cursor = cnxn.cursor()
+    print(f"Connect to ODBC Driver 17 for SQL Server")
+    restored_base_name = '/var/opt/mssql/data/TestDB.mdf'
+    # выполняем запрос
+    cursor.execute(f"RESTORE DATABASE [{DB_NAME}] FROM  DISK = N'/tmp/db.sql.gz'"
+                   f" WITH REPLACE, FILE = 1, "
+                   f"MOVE N'{DB_NAME}' "
+                   f"TO N'/var/opt/mssql/data/{DB_NAME}.mdf', "
+                   f"MOVE N'{DB_NAME}_log' "
+                   f"TO N'/var/opt/mssql/data/{DB_NAME}.ldf', "
+                   f"NOUNLOAD, STATS=1")
+
+    # получаем ответ от сервера SQL и оповещаем о статусе выполнения
+    while cursor.nextset():
+        pass
+    cursor.close()
+    print('Restore end !!')
 
 
 # def clear_database():

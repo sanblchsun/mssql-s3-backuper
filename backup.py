@@ -54,11 +54,14 @@ def dump_database():
 
     path = f"{location}/{DB_NAME}-{get_now_datetime_str()}.bak"
     print(f'DB_NAME: {DB_NAME}, path: {path}')
-    backup = f"BACKUP DATABASE [{DB_NAME}] TO DISK = N'{path}' WITH FORMAT, STATS=1"
+    backup = f"BACKUP DATABASE [{DB_NAME}] TO DISK = N'{path}' WITH COPY_ONLY, STATS=1"
     cursor.execute(backup)
+    while cursor.nextset():
+        pass
+    cursor.close()
+
     str_cmd = f"openssl smime -encrypt -aes256 -binary -outform DEM -in {path} -out {DB_FILENAME} {BACKUP_KEY_PUB_FILE}"
     dump_db_operation_status = os.WEXITSTATUS(os.system(str_cmd))
-    cursor.close()
     if dump_db_operation_status != 0:
         exit(f"\U00002757 Dump database command exits with status "
              f"{dump_db_operation_status}.")
